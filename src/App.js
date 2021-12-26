@@ -1,42 +1,31 @@
 import './App.css';
-import { Component } from 'react';
 import shortid from 'shortid';
 import Container from './components/Container/Container';
 import ContactForm from './components/ContactForm/ContactForm';
 import Filter from './components/Filter/Filter';
 import ContactList from './components/ContactList/ContactList';
+import { useState, useEffect } from 'react';
 
-class App extends Component {
-  state = {
-    contacts: [
-    ],
-    filter: '',
-  };
-componentDidMount() {
-    const contacts = localStorage.getItem('contacts');
-    const parsedContacts = JSON.parse(contacts);
+const App = () => {
+   const [contacts, setContacts] = useState(() => {
+    return JSON.parse(localStorage.getItem('contacts')) ?? [];
+  });
 
-    if (parsedContacts) {
-      this.setState({ contacts: parsedContacts });
-    }
-  }
+  useEffect(() => {
+    window.localStorage.setItem('contacts', JSON.stringify(contacts));
+  }, [contacts]);
 
-  componentDidUpdate(prevProps, prevState) {
-    const nextContacts = this.state.contacts;
-    const prevContacts = prevState.contacts;
+  const [filter, setFilter] = useState('');
 
-    if (nextContacts !== prevContacts) {
-      localStorage.setItem('contacts', JSON.stringify(nextContacts));
-    }
-  }
-  addContact = ({ name, number }) => {
+
+
+
+  const addContact = (name, number) => {
     const contact = {
       id: shortid.generate(),
       name,
       number,
     };
-
-    const { contacts } = this.state;
 
     if (
       contacts.find(
@@ -51,46 +40,46 @@ componentDidMount() {
     } else if (!/\d{3}[-]\d{2}[-]\d{2}/g.test(number)) {
       alert('Enter the correct number phone!');
     } else {
-      this.setState(({ contacts }) => ({
-        contacts: [contact, ...contacts],
-      }));
+      setContacts(prevContacts =>
+        [contact, ...prevContacts].sort((a, b) => {
+          if (a.name.toLowerCase() > b.name.toLowerCase()) return 1;
+          if (a.name.toLowerCase() < b.name.toLowerCase()) return -1;
+          return 0;
+        }),
+      );
     }
   };
 
-  deleteContact = contactId => {
-    this.setState(({ contacts }) => ({
-      contacts: contacts.filter(contact => contact.id !== contactId),
-    }));
+  
+    const deleteContact = contactID => {
+    setContacts(contacts.filter(({ id }) => id !== contactID));
   };
 
-  changeFilter = e => {
-    this.setState({ filter: e.currentTarget.value });
+   const changeFilter = filter => {
+    setFilter(filter);
   };
 
-  getVisibleContacts = () => {
-    const { contacts, filter } = this.state;
-    const normalizedFilter = filter.toLowerCase();
-
+ const getVisibleContacts = () => {
     return contacts.filter(contact =>
-      contact.name.toLowerCase().includes(normalizedFilter),
+      contact.name.toLowerCase().includes(filter),
     );
   };
 
-  render() {
-    const { filter, contacts } = this.state;
-    const visibleContacts = this.getVisibleContacts();
+  const visibleContacts = getVisibleContacts();
+
+
     return (
       <Container>
         <h1>Phonebook</h1>
-        <ContactForm onSubmit={this.addContact} />
+        <ContactForm onSubmit={addContact} />
         <h2>Contacts</h2>
         {contacts.length > 1 && (
-          <Filter value={filter} onChange={this.changeFilter} />
+          <Filter value={filter} onChange={changeFilter} />
         )}
         {contacts.length > 0 ? (
           <ContactList
             contacts={visibleContacts}
-            onDeleteContact={this.deleteContact}
+            onDeleteContact={deleteContact}
           />
         ) : (
           <p>Your phonebook is empty. Please add contact.</p>
@@ -98,6 +87,6 @@ componentDidMount() {
       </Container>
     );
   }
-}
+
 
 export default App;

@@ -1,43 +1,51 @@
-import { Component } from "react";
 import PropTypes from "prop-types";
 import styles from './contactForm.module.css';
+import { useState } from 'react';
 
-class ContactForm extends Component {
-    state = {
-        name: '',
-        number: '',
-    };
+const ContactForm = ({onSubmit}) => {
+    const [name, setName] = useState('');
+    const [number, setNumber] = useState('');
 
-    handleChange = e => {
-        const { name, value } = e.currentTarget;
-        this.setState ({ [name]: value });
+    const handleChange = e => {
+        const { name, value } = e.target;
+        switch (name) {
+      case 'name':
+        setName(value);
+        break;
+
+      case 'number':
+        setNumber(value);
+        break;
+
+      default:
+        return;
+    }
     };
-    handleSubmit = e => {
+    const handleSubmit = e => {
         e.preventDefault();
-        this.props.onSubmit(this.state);
-        this.setState({ name: '', number: '' });
-
+        onSubmit(name, number);
+            setName('');
+            setNumber('');
     };
-    render() {
-        const { name, number } = this.state;
+    
         return (
-            <form className={styles.form} onSubmit={this.handleSubmit}>
+            <form className={styles.form} onSubmit={handleSubmit}>
                 <label className={styles.label}>Name
                     <input
-                        className={styles.label}
+                        className={styles.input}
                         type="text"
                         name="name"
                         value={name}
-                        onChange={this.handleChange}
+                        onChange={handleChange}
                         placeholder="Andrii Hrytsai" />
                 </label>
                 <label className={styles.label}>Number
                     <input
-                        className={styles.label}
+                        className={styles.input}
                         type="text"
                         name="number"
                         value={number}
-                        onChange={this.handleChange}
+                        onChange={handleChange}
                         placeholder="099-99-99" />
                 </label>
                 <button className={styles.btn} type="submit">
@@ -46,7 +54,7 @@ class ContactForm extends Component {
             </form>
         )
     }
-}
+
 
 ContactForm.propTypes = {
   onSubmit: PropTypes.func.isRequired,
